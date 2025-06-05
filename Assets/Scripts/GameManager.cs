@@ -8,34 +8,42 @@ public enum TipoLixo { Nenhum, Plastico, Metal, Papel, Vidro }
 [System.Serializable]
 public class LixoPrefab
 {
-    public GameObject prefab;
-    public TipoLixo tipo;
+    public GameObject prefab; // O GameObject Prefab do lixo
+    public TipoLixo tipo;     // O tipo de lixo associado a este prefab
 }
 
 public class GameManager : MonoBehaviour
 {
+    // Padrão Singleton: Permite que outros scripts acessem esta instância facilmente
     public static GameManager Instance { get; private set; }
 
-    public LixoPrefab[] tiposDeLixoPrefabs;
-    public int quantidadeTotalLixo = 10;
+    public LixoPrefab[] tiposDeLixoPrefabs; // Array para os diferentes prefabs de lixo e seus tipos
+    public int quantidadeTotalLixo = 10; // Total de lixos a serem gerados neste nível
 
-    // NOVO: Lista de GameObjects que são os pontos de spawn (definidos no editor)
+    // NOVO: Array de GameObjects que são os pontos de spawn (definidos no editor)
     public GameObject[] spawnPoints;
 
-    public TextMeshProUGUI contadorLixoMensagemTexto;
-    private int lixoColetadoAtual = 0;
+    // NOVO: Adicione uma referência ao AudioClip da música de fundo
+    public AudioClip musicaDeFundo;
+    // NOVO: Adicione uma referência ao AudioClip para o som de nível concluído
+    public AudioClip somNivelConcluido;
 
+    public TextMeshProUGUI contadorLixoMensagemTexto; // Referência ao objeto de texto para exibir a contagem
+    private int lixoColetadoAtual = 0; // Quantidade de lixo já coletada e depositada
+
+    // Evento para notificar quando o nível é concluído
     public static event System.Action OnNivelConcluido;
 
     void Awake()
     {
+        // Implementação do Singleton: Garante que só exista uma instância deste gerenciador
         if (Instance != null && Instance != this)
         {
-            Destroy(gameObject);
+            Destroy(gameObject); // Destrói se já existe outra instância
         }
         else
         {
-            Instance = this;
+            Instance = this; // Define esta como a única instância
         }
     }
 
@@ -48,10 +56,17 @@ public class GameManager : MonoBehaviour
             return; // Interrompe se não houver pontos
         }
 
-        SpawnarTodosOsLixos();
-        AtualizarContador();
+        SpawnarTodosOsLixos(); // Começa gerando os lixos
+        AtualizarContador();   // Atualiza o contador na tela
+
+        // NOVO: Toca a música de fundo quando o jogo inicia
+        if (AudioManager.Instance != null && musicaDeFundo != null)
+        {
+            AudioManager.Instance.PlayMusic(musicaDeFundo);
+        }
     }
 
+    // Função para gerar todos os lixos aleatoriamente nos pontos de spawn
     void SpawnarTodosOsLixos()
     {
         // NOVO: Cria uma lista temporária de índices disponíveis dos pontos de spawn
@@ -73,55 +88,67 @@ public class GameManager : MonoBehaviour
 
             Vector3 spawnPosition = spawnPoints[spawnPointIndex].transform.position;
 
-            // Escolhe um tipo de lixo aleatoriamente
+            // Escolhe um tipo de lixo aleatoriamente do array
             LixoPrefab lixoEscolhido = tiposDeLixoPrefabs[Random.Range(0, tiposDeLixoPrefabs.Length)];
 
             GameObject novoLixo = Instantiate(lixoEscolhido.prefab, spawnPosition, Quaternion.identity);
 
+            // Adiciona o script ItemLixo ao GameObject recém-instanciado se ele ainda não tiver um
             TrashItem itemLixoComponent = novoLixo.GetComponent<TrashItem>();
             if (itemLixoComponent == null)
             {
                 itemLixoComponent = novoLixo.AddComponent<TrashItem>();
             }
+            // Atribui o tipo correto ao ItemLixo instanciado
             itemLixoComponent.tipoLixo = lixoEscolhido.tipo;
-
-            // Removido: A lógica de OverlapCircle não é mais necessária aqui,
-            // pois os pontos já são definidos para serem livres.
         }
     }
 
+    // Método público para ser chamado pelo ItemLixo quando ele é depositado corretamente
     public void LixoColetado()
     {
-        lixoColetadoAtual++;
-        AtualizarContador();
+        lixoColetadoAtual++; // Incrementa a contagem de lixo coletado
+        AtualizarContador();   // Atualiza o texto na tela
 
+        // Verifica se todo o lixo necessário foi coletado
         if (lixoColetadoAtual >= quantidadeTotalLixo)
         {
+            // Dispara o evento de nível concluído (outros scripts podem estar "ouvindo")
             if (OnNivelConcluido != null)
             {
                 OnNivelConcluido();
             }
-            NivelConcluido();
+            NivelConcluido(); // Chama a função para lidar com a conclusão do nível
         }
     }
 
+    // Atualiza o texto do contador na tela
     void AtualizarContador()
     {
         if (contadorLixoMensagemTexto != null)
         {
             contadorLixoMensagemTexto.text = "Lixo: " + lixoColetadoAtual + "/" + quantidadeTotalLixo;
-            contadorLixoMensagemTexto.gameObject.SetActive(true);
+            contadorLixoMensagemTexto.gameObject.SetActive(true); // Garante que o texto esteja visível
         }
     }
 
+    // Lógica para quando o nível é concluído
     void NivelConcluido()
     {
         if (contadorLixoMensagemTexto != null)
         {
-            contadorLixoMensagemTexto.text = "Nível de Limpeza Concluido!";
-            Debug.Log("Nível Concluído!");
+            contadorLixoMensagemTexto.text = "Nível de Limpeza Concluído!";
+            Debug.Log("Nível Concluído!"); // Mensagem no console da Unity
         }
+        // NOVO: Toca um som quando o nível é concluído
+        if (AudioManager.Instance != null && somNivelConcluido != null)
+        {
+            AudioManager.Instance.Play(somNivelConcluido);
+            // Opcional: Parar a música de fundo ao concluir o nível
+            // AudioManager.Instance.StopMusic(); 
+        }
+        // *** Aqui você pode adicionar lógica para carregar o próximo nível ou ativar a tela de puzzle do coral! ***
+        // Ex: SceneManager.LoadScene("NomeDaCenaDoPuzzleDoCoral");
+        // Ou ativar um painel de UI que inicie o puzzle.
     }
-
 }
-

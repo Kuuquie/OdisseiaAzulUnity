@@ -99,6 +99,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tipoAceito: 3
+  somDepositoCorreto: {fileID: 8300000, guid: c88ab5e9a24dd144aa944962b1d320a7, type: 3}
+  somDepositoIncorreto: {fileID: 8300000, guid: eac4fbc2fc4da5049a37c3da5984bd12, type: 3}
 --- !u!61 &8176503869357612565
 BoxCollider2D:
   m_ObjectHideFlags: 0

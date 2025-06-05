@@ -6,6 +6,10 @@ public class TrashBin : MonoBehaviour
 {
     public TipoLixo tipoAceito; // O tipo de lixo que este cesto aceita (Plastico, Metal, etc.)
 
+    // NOVO: Adicione referências aos AudioClips para sons de depósito
+    public AudioClip somDepositoCorreto;
+    public AudioClip somDepositoIncorreto;
+
     // Esta função é chamada quando um Collider 2D de outro objeto entra no Collider 2D deste cesto
     // O Collider 2D do cesto DEVE ter 'Is Trigger' marcado no Inspector.
     void OnTriggerEnter2D(Collider2D other)
@@ -28,14 +32,25 @@ public class TrashBin : MonoBehaviour
                 {
                     lixoParaDepositar.Depositar(); // Chama o método de depósito do ItemLixo
                     player.LixoDepositado(); // Notifica o PlayerController que o lixo foi solto
+
+                    // NOVO: Toca som de depósito correto
+                    if (AudioManager.Instance != null && somDepositoCorreto != null)
+                    {
+                        AudioManager.Instance.Play(somDepositoCorreto);
+                    }
                 }
             }
             // Se o jogador está carregando lixo, mas é do tipo errado para este cesto
-            else if (lixoDoPlayer != TipoLixo.Nenhum)
+            else if (lixoDoPlayer != TipoLixo.Nenhum) // Garante que o player está com algum lixo
             {
                 Debug.Log("Lixo incorreto! Este cesto é para " + tipoAceito.ToString() + ", mas você tentou depositar " + lixoDoPlayer.ToString());
-                // Opcional: Você pode adicionar aqui um efeito visual, som de erro, ou uma mensagem para o jogador
+                // NOVO: Toca som de depósito incorreto
+                if (AudioManager.Instance != null && somDepositoIncorreto != null)
+                {
+                    AudioManager.Instance.Play(somDepositoIncorreto);
+                }
             }
+            // Se o player não está carregando lixo (lixoDoPlayer == TipoLixo.Nenhum), não faz nada.
         }
     }
 }

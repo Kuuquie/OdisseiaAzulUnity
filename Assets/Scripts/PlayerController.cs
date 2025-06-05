@@ -4,27 +4,27 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public float velocidadeMovimento = 5.0f;
-    private Vector3 targetPosition;
-    private TrashItem lixoCarregado = null;
-    private bool estaMovendoParaColetar = false;
-    private bool estaMovendoParaDepositar = false;
+    public float velocidadeMovimento = 5.0f; // Velocidade de movimento do jogador (peixinho)
+    private Vector3 targetPosition;         // Posição para onde o jogador deve ir
+    private TrashItem lixoCarregado = null;  // Referência ao lixo que o jogador está carregando
+    private bool estaMovendoParaColetar = false; // Flag para saber se o jogador está indo pegar lixo
+    private bool estaMovendoParaDepositar = false; // Flag para saber se o jogador está indo depositar lixo
 
     // NOVO: Adiciona uma referência ao lixo que o peixe *está indo buscar*
     private TrashItem lixoAlvoParaColetar = null;
 
     void Start()
     {
-        targetPosition = transform.position;
+        targetPosition = transform.position; // O jogador começa na sua posição atual
     }
 
     void Update()
     {
         // Detecta o clique do mouse
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0)) // 0 para o botão esquerdo do mouse
         {
             Vector3 clickPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            clickPosition.z = transform.position.z;
+            clickPosition.z = transform.position.z; // Manter a profundidade Z do jogador
 
             RaycastHit2D hit = Physics2D.Raycast(clickPosition, Vector2.zero);
 
@@ -38,22 +38,22 @@ public class PlayerController : MonoBehaviour
                 if (hit.collider != null)
                 {
                     TrashItem lixoClicado = hit.collider.GetComponent<TrashItem>();
-                    TrashBin cestoClicado = hit.collider.GetComponent<TrashBin>(); // Pode ser clicado por engano
+                    // CestoLixo cestoClicado = hit.collider.GetComponent<CestoLixo>(); // Não usado diretamente aqui, mas pode ser para lógica futura
 
                     if (lixoClicado != null) // Clicou em um lixo
                     {
                         targetPosition = lixoClicado.transform.position;
-                        lixoAlvoParaColetar = lixoClicado; // Define o lixo alvo
+                        lixoAlvoParaColetar = lixoClicado; // Define o lixo alvo que ele irá buscar
                         estaMovendoParaColetar = true;
                     }
-                    else // Clicou em algo que não é lixo (ou é um cesto vazio)
+                    else // Clicou em algo que não é lixo (ou é um cesto vazio, ou fundo)
                     {
-                        targetPosition = clickPosition; // Move livremente
+                        targetPosition = clickPosition; // Move livremente para a posição do clique
                     }
                 }
-                else // Clicou em um lugar vazio
+                else // Clicou em um lugar vazio (não atingiu nenhum collider)
                 {
-                    targetPosition = clickPosition; // Move livremente
+                    targetPosition = clickPosition; // Move livremente para a posição do clique
                 }
             }
             else // O jogador ESTÁ carregando lixo
@@ -67,14 +67,14 @@ public class PlayerController : MonoBehaviour
                         targetPosition = cestoClicado.transform.position;
                         estaMovendoParaDepositar = true;
                     }
-                    // Se clicou em algo que NÃO É cesto enquanto carrega lixo, ignore o clique
+                    // Se clicou em algo que NÃO É cesto enquanto carrega lixo, ignore o clique.
                     // O peixe continua parado com o lixo, esperando um clique em um cesto.
                 }
                 // Se clicou em um lugar vazio enquanto carrega lixo, ignore o clique.
             }
         }
 
-        // Move o jogador
+        // Move o jogador em direção à targetPosition
         transform.position = Vector3.MoveTowards(transform.position, targetPosition, velocidadeMovimento * Time.deltaTime);
 
         // Lógica para quando o jogador alcança o alvo
@@ -85,34 +85,33 @@ public class PlayerController : MonoBehaviour
             if (estaMovendoParaColetar && lixoAlvoParaColetar != null)
             {
                 // Apenas se o lixo-alvo for o mesmo que o peixe está indo coletar
-                if (lixoAlvoParaColetar.gameObject.activeInHierarchy && lixoCarregado == null) // Garante que o lixo ainda está ativo e não foi coletado por outro meio
+                // e o lixo ainda está ativo na hierarquia e o peixe não está carregando nada
+                if (lixoAlvoParaColetar.gameObject.activeInHierarchy && lixoCarregado == null)
                 {
                     lixoCarregado = lixoAlvoParaColetar; // Define que está carregando ESTE lixo
-                    lixoCarregado.Coletar(this.transform);
-                    // NÃO resetamos targetPosition aqui. Ela se mantém como a posição do lixo,
-                    // e o próximo clique do jogador levará o peixe e o lixo para o cesto.
+                    lixoCarregado.Coletar(this.transform); // Chama a função Coletar do ItemLixo
                 }
                 estaMovendoParaColetar = false; // Reseta a flag após a tentativa de coleta
                 lixoAlvoParaColetar = null; // Limpa o alvo após a tentativa
             }
-            // A flag estaMovendoParaDepositar é resetada após o clique no cesto, não ao chegar.
-            // A lógica de depósito é tratada no CestoLixo via OnTriggerEnter2D.
+            // A lógica de depósito é tratada no CestoLixo via OnTriggerEnter2D,
+            // então não precisamos de uma lógica de "chegou ao cesto" aqui diretamente.
         }
 
-        // Se o jogador está carregando lixo, o lixo o seguirá automaticamente.
+        // Se o jogador está carregando lixo, o lixo o seguirá automaticamente porque é seu filho.
         if (lixoCarregado != null)
         {
-            lixoCarregado.transform.localPosition = Vector3.zero;
+            lixoCarregado.transform.localPosition = Vector3.zero; // Ajusta a posição local do lixo para o peixe
         }
 
-        // Virar o jogador (peixinho) para a direção do movimento
+        // Opcional: Virar o jogador (peixinho) para a direção do movimento
         if (targetPosition.x < transform.position.x)
         {
-            transform.localScale = new Vector3(-1, 1, 1);
+            transform.localScale = new Vector3(-1, 1, 1); // Vira para a esquerda
         }
         else if (targetPosition.x > transform.position.x)
         {
-            transform.localScale = new Vector3(1, 1, 1);
+            transform.localScale = new Vector3(1, 1, 1); // Vira para a direita
         }
     }
 
@@ -121,18 +120,19 @@ public class PlayerController : MonoBehaviour
     {
         lixoCarregado = null; // O jogador não está mais carregando lixo
         targetPosition = transform.position; // Reseta targetPosition para a posição atual do peixe
-        // Garante que todas as flags de movimento estejam limpas
+        // Garante que todas as flags de movimento e alvos estejam limpos
         estaMovendoParaColetar = false;
         estaMovendoParaDepositar = false;
         lixoAlvoParaColetar = null;
     }
 
+    // Método público para retornar o tipo de lixo que o jogador está carregando
     public TipoLixo GetTipoLixoCarregado()
     {
         if (lixoCarregado != null)
         {
             return lixoCarregado.tipoLixo;
         }
-        return TipoLixo.Nenhum;
+        return TipoLixo.Nenhum; // Retorna TipoLixo.Nenhum se o jogador não estiver carregando lixo
     }
 }
