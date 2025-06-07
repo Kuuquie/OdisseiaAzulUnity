@@ -38,6 +38,9 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: BackGrouind
+    uniqueID: 2096821357
+    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0

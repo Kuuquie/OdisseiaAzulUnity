@@ -5,16 +5,10 @@ using UnityEngine;
 public class AudioManager : MonoBehaviour
 {
     public AudioSource EffectsSource;
-
     public AudioSource MusicSource;
 
-
-
     public float LowPitchRange = .95f;
-
     public float HighPitchRange = 1.05f;
-
-
 
     public static AudioManager Instance = null;
 
@@ -52,10 +46,6 @@ public class AudioManager : MonoBehaviour
 
     }
 
-
-
-
-
     public void Play(AudioClip clip)
 
     {
@@ -65,10 +55,6 @@ public class AudioManager : MonoBehaviour
         EffectsSource.Play();
 
     }
-
-
-
-
 
     public void PlayMusic(AudioClip clip)
 
@@ -80,10 +66,6 @@ public class AudioManager : MonoBehaviour
 
     }
 
-
-
-
-
     public void Pause()
 
     {
@@ -91,10 +73,6 @@ public class AudioManager : MonoBehaviour
         EffectsSource.Pause();
 
     }
-
-
-
-
 
     public void PauseMusic()
 
@@ -105,9 +83,6 @@ public class AudioManager : MonoBehaviour
     }
 
 
-
-
-
     public void Stop()
 
     {
@@ -116,12 +91,6 @@ public class AudioManager : MonoBehaviour
 
     }
 
-
-
-
-
-
-
     public void StopMusic()
 
     {
@@ -129,10 +98,6 @@ public class AudioManager : MonoBehaviour
         MusicSource.Stop();
 
     }
-
-
-
-
 
     public void RandomSoundEffect(params AudioClip[] clips)
 
